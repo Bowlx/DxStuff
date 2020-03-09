@@ -23,8 +23,18 @@ void Graphics::RenderFrame()
 {
 
 	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	static float x = 0;
+	static float d = 1;
+	x +=d * 0.01;
+	if (abs(x) >= 1) d = -d;
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	this->cb_ps_lightBuffer.data.dir = XMFLOAT3(0.25f, 0.5f+x, -1.0f);
+	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->cb_ps_lightBuffer.ApplyChanges();
+	this->deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
+	
 	for(auto i =0; i< models.size();i++)	
 		{
 	
@@ -190,6 +200,7 @@ bool Graphics::InitializeShaders()
 	{
 		{"POSITION", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  },
 		{"TEXCOORD", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  },
+	{ "NORMAL",     0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
 
 	UINT numElements = ARRAYSIZE(layout);
@@ -229,12 +240,14 @@ bool Graphics::InitializeScene()
 		hr = this->cb_vs_vertexshader.Initialize(this->device.Get(), this->deviceContext.Get());
 		COM_ERROR_IF_FAILED(hr, "Failed to initialize constant buffer.");
 
-		hr = this->cb_ps_pixelshader.Initialize(this->device.Get(), this->deviceContext.Get());
+	/*	hr = this->cb_ps_pixelshader.Initialize(this->device.Get(), this->deviceContext.Get());
+		COM_ERROR_IF_FAILED(hr, "Failed to initialize constant buffer.");*/
+		hr = this->cb_ps_lightBuffer.Initialize(this->device.Get(), this->deviceContext.Get());
 		COM_ERROR_IF_FAILED(hr, "Failed to initialize constant buffer.");
 		Model in;
 		if (!in.Initialize("Data\\Objects\\cat.obj", this->device.Get(), this->deviceContext.Get(), this->catTexture.Get(), this->cb_vs_vertexshader))
 			return false;
-		for (auto j = 1; j <= 3; j++)
+		for (auto j = 1; j <= 6; j++)
 		{
 			for (auto i = 0; i <= 10; i++)
 			{

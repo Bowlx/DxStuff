@@ -39,8 +39,9 @@ void Model::SetTexture(ID3D11ShaderResourceView * texture)
 void Model::Draw(const XMMATRIX & viewProjectionMatrix)
 {
 	//Update Constant buffer with WVP Matrix
-	this->cb_vs_vertexshader->data.mat = this->worldMatrix * viewProjectionMatrix; //Calculate World-View-Projection Matrix
-	this->cb_vs_vertexshader->data.mat = XMMatrixTranspose(this->cb_vs_vertexshader->data.mat);
+	this->cb_vs_vertexshader->data.WVP = this->worldMatrix * viewProjectionMatrix; //Calculate World-View-Projection Matrix
+	this->cb_vs_vertexshader->data.WVP = XMMatrixTranspose(this->cb_vs_vertexshader->data.WVP);
+	this->cb_vs_vertexshader->data.World = XMMatrixTranspose(this->worldMatrix);
 	this->cb_vs_vertexshader->ApplyChanges();
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->cb_vs_vertexshader->GetAddressOf());
 
@@ -97,12 +98,16 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene)
 		vertex.pos.x = mesh->mVertices[i].x;
 		vertex.pos.y = mesh->mVertices[i].y;
 		vertex.pos.z = mesh->mVertices[i].z;
+		vertex.normal.x = mesh->mNormals[i].x;
+		vertex.normal.y = mesh->mNormals[i].y;
+		vertex.normal.z = mesh->mNormals[i].z;
 
 		if (mesh->mTextureCoords[0])
 		{
 			vertex.texCoord.x = (float)mesh->mTextureCoords[0][i].x;
 			vertex.texCoord.y = (float)mesh->mTextureCoords[0][i].y;
 		}
+	
 
 		vertices.push_back(vertex);
 	}
