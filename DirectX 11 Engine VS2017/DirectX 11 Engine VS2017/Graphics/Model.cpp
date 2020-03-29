@@ -53,10 +53,12 @@ void Model::Draw(const XMMATRIX & viewProjectionMatrix)
 	}
 }
 
-void Model::DrawToDepth(const XMMATRIX& viewProjectionMatrix)
+void Model::DrawToDepth(const XMMATRIX& viewProjectionMatrix, const XMMATRIX& lightviewproj)
 {
 	this->cb_vs_vertexshader->data.WVP = this->worldMatrix* viewProjectionMatrix; //Calculate World-View-Projection Matrix
 	this->cb_vs_vertexshader->data.WVP = XMMatrixTranspose(this->cb_vs_vertexshader->data.WVP);
+	this->cb_vs_vertexshader->data.WVPlight = this->worldMatrix * lightviewproj; //Calculate World-View-Projection Matrix
+	this->cb_vs_vertexshader->data.WVPlight = XMMatrixTranspose(this->cb_vs_vertexshader->data.WVPlight);
 	this->cb_vs_vertexshader->data.World = XMMatrixTranspose(this->worldMatrix);
 	this->cb_vs_vertexshader->ApplyChanges();
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->cb_vs_vertexshader->GetAddressOf());

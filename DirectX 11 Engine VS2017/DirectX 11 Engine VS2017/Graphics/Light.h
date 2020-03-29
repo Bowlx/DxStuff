@@ -12,28 +12,31 @@
 class Light : public Camera
 {
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> RT_texture;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> DS_texture;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> RTTexture;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> DSTexture;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RTV;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rastState;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DSV;
+
 
 	
 	D3D11_VIEWPORT viewport;
-	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
-	DirectX::XMMATRIX viewProjectionMatrix;
+	ConstantBuffer<lightbuff> lightbuffer;
+
 
 	
 public:
 	Light();
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> DepthshaderView; 
-	int mapSize = 4096;
+	ID3D11ShaderResourceView* SRV; 
+	int mapSize = 8192;
 	DirectX::XMMATRIX getViewProjectionMatrix();
+	void SetProjectionValues(float fovDegrees, float aspectRatio, float nearZ, float farZ);
+	ID3D11ShaderResourceView* GetShaderResourceView();
 public:
 	bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void Update();
 	void Draw(ID3D11DeviceContext* deviceContext);
 	void setRenderTarget(ID3D11DeviceContext* deviceContext);
 	void ClearRenderTarget(ID3D11DeviceContext* deviceContext);
+	void setShaderResources(ID3D11DeviceContext* deviceContext);
 
 };

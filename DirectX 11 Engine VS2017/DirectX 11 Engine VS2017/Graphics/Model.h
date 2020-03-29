@@ -14,7 +14,7 @@ public:
 	bool Initialize(const std::string & filePath, ID3D11Device * device, ID3D11DeviceContext * deviceContext, ID3D11ShaderResourceView * texture, ConstantBuffer<CB_VS_vertexshader> & cb_vs_vertexshader);
 	void SetTexture(ID3D11ShaderResourceView * texture);
 	void Draw(const XMMATRIX & viewProjectionMatrix);
-	void DrawToDepth(const XMMATRIX& viewProjectionMatrix);
+	void DrawToDepth(const XMMATRIX& viewProjectionMatrix, const XMMATRIX& lightProjectionMatrix);
 	bool bounded;
 
 	

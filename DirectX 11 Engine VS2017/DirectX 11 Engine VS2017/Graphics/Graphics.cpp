@@ -22,48 +22,51 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 void Graphics::RenderFrame()
 {
-	this->restoreTargets();
+	
 	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 
-	//this->deviceContext->VSSetShader(depthvertexshader.GetShader(), NULL, 0);
-	//this->deviceContext->PSSetShader(depthpixelshader.GetShader(), NULL, 0);
+	this->deviceContext->VSSetShader(depthvertexshader.GetShader(), NULL, 0);
+	this->deviceContext->PSSetShader(depthpixelshader.GetShader(), NULL, 0);
+	this->deviceContext->IASetInputLayout(this->depthvertexshader.GetInputLayout());
+	light.setRenderTarget(this->deviceContext.Get());
+	light.ClearRenderTarget(this->deviceContext.Get());
 
-	//light.Draw(this->deviceContext.Get());
-	//for (auto i = 0; i < models.size(); i++)
-	//{
+	for (auto i = 0; i < models.size(); i++)
+	{
 
 
-	//	models[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix());
+		models[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(),light.GetViewMatrix() * light.GetProjectionMatrix());
 
-	//}
+	}
+	modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+	modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
-	//this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
-	//this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH , 1.0f, 0);
-	restoreTargets();
 
+
+	this->restoreTargets();
 	
+	light.setShaderResources(this->deviceContext.Get());
 
-
+	//
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-	this->cb_ps_lightBuffer.data.dir = XMFLOAT3(0.25f, 0.5f, -1.0f);
-	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 	this->cb_ps_lightBuffer.ApplyChanges();
 	this->deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
 	for(auto i =0; i< models.size();i++)	
 		{
 	
 			
-			models[i].Draw(light.GetViewMatrix() * light.GetProjectionMatrix());
+			models[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 		
 		}
 
 		static XMFLOAT3  ground = XMFLOAT3(0.0f, -2.0f, 0);
-		modelPlayer.SetPosition(light.GetPositionVector() + light.GetForwardVector()*6+ XMLoadFloat3(&ground));
-		modelPlayer.Draw(light.GetViewMatrix() * light.GetProjectionMatrix());
-		modelCube.Draw(light.GetViewMatrix() * light.GetProjectionMatrix());
+		modelPlayer.SetPosition(camera.GetPositionVector() + camera.GetForwardVector()*6+ XMLoadFloat3(&ground));
+		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 	
 
 	this->swapchain->Present(1, NULL);
@@ -73,7 +76,8 @@ void Graphics::restoreTargets()
 {
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
-	this->deviceContext->IASetInputLayout(this->depthvertexshader.GetInputLayout());
+	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
+
 	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->deviceContext->RSSetState(this->rasterizerState.Get());
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
@@ -81,6 +85,7 @@ void Graphics::restoreTargets()
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetSamplers(1, 1, this->clampSamplerState.GetAddressOf());
 	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	this->deviceContext->RSSetViewports(1, &viewport);
 }
 
 bool Graphics::InitializeDirectX(HWND hwnd)
@@ -164,7 +169,12 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 		//Create & set the Viewport
 		CD3D11_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(this->windowWidth), static_cast<float>(this->windowHeight));;
-		this->deviceContext->RSSetViewports(1, &viewport);
+		this->viewport = viewport;
+		this->viewport.TopLeftX = 0.0f;
+		this->viewport.TopLeftY = 0.0f;
+		this->viewport.Width = static_cast<float>(this->windowWidth);
+		this->viewport.Height = static_cast<float>(this->windowHeight);
+		this->deviceContext->RSSetViewports(1, &this->viewport);
 
 		//Create Rasterizer State
 		CD3D11_RASTERIZER_DESC rasterizerDesc(D3D11_DEFAULT);
@@ -195,19 +205,40 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		COM_ERROR_IF_FAILED(hr, "Failed to create blend state.");
 
 		//Create sampler description for sampler state
-		CD3D11_SAMPLER_DESC sampDesc(D3D11_DEFAULT);
-		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-		hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+		D3D11_SAMPLER_DESC samplerDesc;
+		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.MipLODBias = 0.0f;
+		samplerDesc.MaxAnisotropy = 1;
+		samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+		samplerDesc.BorderColor[0] = 0;
+		samplerDesc.BorderColor[1] = 0;
+		samplerDesc.BorderColor[2] = 0;
+		samplerDesc.BorderColor[3] = 0;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		hr = this->device->CreateSamplerState(&samplerDesc, this->samplerState.GetAddressOf()); //Create sampler state
 		COM_ERROR_IF_FAILED(hr, "Failed to create sampler state.");
 
-		CD3D11_SAMPLER_DESC csampDesc(D3D11_DEFAULT);
-		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		hr = this->device->CreateSamplerState(&csampDesc, this->clampSamplerState.GetAddressOf()); //Create sampler state
+	
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		hr = this->device->CreateSamplerState(&samplerDesc, this->clampSamplerState.GetAddressOf()); //Create sampler state
 		COM_ERROR_IF_FAILED(hr, "Failed to create sampler state.");
+
+		this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);
+		this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
+		this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
+		this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		this->deviceContext->RSSetState(this->rasterizerState.Get());
+		this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+		this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
+		this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+		this->deviceContext->PSSetSamplers(1, 1, this->clampSamplerState.GetAddressOf());
+		this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
 	}
 	catch (COMException & exception)
 	{
@@ -295,8 +326,8 @@ bool Graphics::InitializeScene()
 			for (auto i = 0; i <= 10; i++)
 			{
 				static int la = 1;
-				la = la - (la * 2);
-				in.SetPosition(la * (get_random() * get_random()), 0, get_random() * get_random());
+				
+				in.SetPosition( (get_random() * get_random()), -0.8, get_random() * get_random());
 				in.SetScale(0.10 * j, 0.10 * j, 0.10 * j);
 				in.SetRotation(0, get_random(), 0);
 				models.push_back(in);
@@ -308,7 +339,7 @@ bool Graphics::InitializeScene()
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
 		if (!modelPlayer.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->playerTexture.Get(), this->cb_vs_vertexshader))
 			return false;
-		modelPlayer.SetPosition(0, 0  , 8);
+		modelPlayer.SetPosition(0, -0.5  , 8);
 		modelPlayer.SetScale(0.25, 0.25, 0.25);
 		
 		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\pinksquare.jpg", nullptr, planeTexture.GetAddressOf());
@@ -319,9 +350,9 @@ bool Graphics::InitializeScene()
 		modelCube.AdjustPosition(-1000, -1, 10000);
 		camera.SetPosition(0.0f, 2.0f, 0.0f);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
-		light.SetPosition(0.0f, 10, 0.0f);
-		light.SetProjectionValues(90, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 2.0f, 1000.0f);
-		light.SetLookAtPos(XMFLOAT3(5, 0, 15));
+		light.SetPosition(7.0f, 25, 5.0f);
+		light.SetProjectionValues(225, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 20, 50.0f);
+		light.SetLookAtPos(XMFLOAT3(7, 0, 5));
 	}
 	catch (COMException & exception)
 	{

@@ -1,14 +1,16 @@
-cbuffer MatrixBuffer : register(b0)
+cbuffer mycBuffer : register(b0)
 {
-	float4x4 WVP;
+
 	float4x4 World;
+	float4x4 WVP;
+	float4x4 WVPlight;
 };
 
-struct VertexInputType
+struct VS_INPUT
 {
-	float4 inPosition : POSITION;
-	float2 inTexCoord : TEXCOORD;
+	float3 inPos : POSITION;
 	float3 normal : NORMAL;
+	float2 inTexCoord : TEXCOORD;
 };
 
 struct PixelInputType
@@ -17,12 +19,12 @@ struct PixelInputType
 	float4 depthPosition : TEXTURE0;
 };
 
-PixelInputType main(VertexInputType input)
+PixelInputType main(VS_INPUT input)
 {
 	PixelInputType output;
 
-	input.inPosition.w = 1.0f;
-	output.position = mul(input.inPosition, WVP);
+
+	output.position = mul(float4(input.inPos,1.0f), WVPlight);
 	// Пишем позицию в depthPosition
 	output.depthPosition = output.position;
 
