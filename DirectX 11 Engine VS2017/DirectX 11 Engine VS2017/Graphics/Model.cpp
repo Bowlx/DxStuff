@@ -53,6 +53,23 @@ void Model::Draw(const XMMATRIX & viewProjectionMatrix)
 	}
 }
 
+void Model::DrawToDepth(const XMMATRIX& viewProjectionMatrix)
+{
+	this->cb_vs_vertexshader->data.WVP = this->worldMatrix* viewProjectionMatrix; //Calculate World-View-Projection Matrix
+	this->cb_vs_vertexshader->data.WVP = XMMatrixTranspose(this->cb_vs_vertexshader->data.WVP);
+	this->cb_vs_vertexshader->data.World = XMMatrixTranspose(this->worldMatrix);
+	this->cb_vs_vertexshader->ApplyChanges();
+	this->deviceContext->VSSetConstantBuffers(0, 1, this->cb_vs_vertexshader->GetAddressOf());
+
+	this->deviceContext->PSSetShaderResources(0, 1, &this->texture); //Set Texture
+
+	for (int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].Draw();
+	}
+}
+
+
 
 
 bool Model::LoadModel(const std::string & filePath)

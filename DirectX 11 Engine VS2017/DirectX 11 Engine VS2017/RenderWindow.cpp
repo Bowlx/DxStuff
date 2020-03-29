@@ -142,7 +142,7 @@ void RenderWindow::RegisterWindowClass()
 	wc.cbClsExtra = 0; //# of extra bytes to allocate following the window-class structure. We are not currently using this.
 	wc.cbWndExtra = 0; //# of extra bytes to allocate following the window instance. We are not currently using this.
 	wc.hInstance = this->hInstance; //Handle to the instance that contains the Window Procedure
-	wc.hIcon = NULL;   //Handle to the class icon. Must be a handle to an icon resource. We are not currently assigning an icon, so this is null.
+	wc.hIcon = NULL;   //Handle to the class icon. Must be a handle to an icon RT_texture. We are not currently assigning an icon, so this is null.
 	wc.hIconSm = NULL; //Handle to small icon for this class. We are not currently assigning an icon, so this is null.
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW); //Default Cursor - If we leave this null, we have to explicitly set the cursor's shape each time it enters the window.
 	wc.hbrBackground = NULL; //Handle to the class background brush for the window's background color - we will leave this blank for now and later set this to black. For stock brushes, see: https://msdn.microsoft.com/en-us/library/windows/desktop/dd144925(v=vs.85).aspx

@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "..\\Timer.h"
 #include "Model.h"
+#include "Light.h"
+
 
 class Graphics
 {
@@ -15,37 +17,48 @@ public:
 	void RenderFrame();
 	Camera camera;
 	Model modelPlayer;
+	Model modelCube;
+	Light light;
 	std::vector<Model> models;
+	void restoreTargets();
 
 private:
+	const int shadowMapSize = 1024;
+	
 	bool InitializeDirectX(HWND hwnd);
 	bool InitializeShaders();
 	bool InitializeScene();
+	
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView;
-
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> depthRenderTargetView;
+	VertexShader depthvertexshader;
+	PixelShader depthpixelshader;
 	VertexShader vertexshader;
 	PixelShader pixelshader;
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_lightBuffer> cb_ps_lightBuffer;
+	CD3D11_VIEWPORT viewport;
+
+	/*Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowMapTex;*/
 	
 
-
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilTex;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStencilState;
-
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerState;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerState_CullFront;
-
 	Microsoft::WRL::ComPtr<ID3D11BlendState> blendState;
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSamplerState;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> catTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> playerTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeTexture;
 
 	int windowWidth = 0;
 	int windowHeight = 0;

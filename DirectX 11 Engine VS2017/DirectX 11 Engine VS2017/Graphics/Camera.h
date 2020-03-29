@@ -34,7 +34,7 @@ public:
 	const XMVECTOR & GetBackwardVector();
 	const XMVECTOR & GetLeftVector();
 	const XMVECTOR& GetCamTarget();
-private:
+protected:
 	void UpdateViewMatrix();
 	XMVECTOR posVector;
 	XMVECTOR rotVector;
