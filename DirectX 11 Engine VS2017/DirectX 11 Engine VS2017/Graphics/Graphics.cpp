@@ -47,12 +47,12 @@ void Graphics::RenderFrame()
 	this->restoreTargets();
 	
 	light.setShaderResources(this->deviceContext.Get());
-
+	this->restoreTargets();
 	//
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
+	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	this->cb_ps_lightBuffer.ApplyChanges();
 	this->deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
 	for(auto i =0; i< models.size();i++)	
@@ -201,7 +201,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		D3D11_BLEND_DESC blendDesc = { 0 };
 		blendDesc.RenderTarget[0] = rtbd;
 
-		hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
+		//hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create blend state.");
 
 		//Create sampler description for sampler state
@@ -298,7 +298,7 @@ bool Graphics::InitializeShaders()
 float get_random()
 {
 	static std::default_random_engine e;
-	static std::uniform_real_distribution<> dis(1, 8.5); // rage 0 - 1
+	static std::uniform_real_distribution<> dis(2, 8.5); // rage 0 - 1
 	return dis(e);
 }
 bool Graphics::InitializeScene()
@@ -327,7 +327,7 @@ bool Graphics::InitializeScene()
 			{
 				static int la = 1;
 				
-				in.SetPosition( (get_random() * get_random()), -0.8, get_random() * get_random());
+				in.SetPosition( (get_random()* get_random()), 0.3, get_random()* get_random());
 				in.SetScale(0.10 * j, 0.10 * j, 0.10 * j);
 				in.SetRotation(0, get_random(), 0);
 				models.push_back(in);
@@ -346,13 +346,13 @@ bool Graphics::InitializeScene()
 		if (!modelCube.Initialize("Data\\Objects\\cube.obj", this->device.Get(), this->deviceContext.Get(), this->planeTexture.Get(), this->cb_vs_vertexshader))
 			return false;
 		
-		modelCube.SetScale(10000, 1, 100000);
-		modelCube.AdjustPosition(-1000, -1, 10000);
-		camera.SetPosition(0.0f, 2.0f, 0.0f);
+		modelCube.SetScale(1000, 1, 10000);
+		modelCube.AdjustPosition(-100, 0, 1000);
+		camera.SetPosition(0.0f, 3.0f, 0.0f);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
-		light.SetPosition(7.0f, 25, 5.0f);
-		light.SetProjectionValues(225, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 20, 50.0f);
-		light.SetLookAtPos(XMFLOAT3(7, 0, 5));
+		//light.SetPosition(15.0f, 25, 15.0f);
+		light.SetProjectionValues(90, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 5, 100.0f);
+		//light.SetLookAtPos(XMFLOAT3(16, 24, 15));
 	}
 	catch (COMException & exception)
 	{

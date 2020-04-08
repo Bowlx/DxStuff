@@ -42,6 +42,7 @@ void Engine::Update()
 			if (me.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
 				this->gfx.camera.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
+				//this->gfx.light.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
 				this->gfx.modelPlayer.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
 				for (auto i = 0; i < this->gfx.models.size(); i++)
 				{

@@ -40,6 +40,7 @@ protected:
 	XMVECTOR rotVector;
 	XMFLOAT3 pos;
 	XMFLOAT3 rot;
+	XMFLOAT3 m_lookAt;
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
 

@@ -1,8 +1,8 @@
 cbuffer mycBuffer : register(b0)
 {
-    float4x4 World;
-    float4x4 WVP;
-    float4x4 WVPlight;
+    matrix World;
+    matrix WVP;
+    matrix WVPlight;
 }; 
 
 cbuffer lightBuffer : register(b1)
@@ -14,8 +14,9 @@ cbuffer lightBuffer : register(b1)
 struct VS_INPUT
 {
     float3 inPos : POSITION;
+    float2 inTexCoord : TEXCOORD0;
     float3 normal : NORMAL;
-    float2 inTexCoord : TEXCOORD;
+   
   
 };
 
@@ -38,12 +39,12 @@ VS_OUTPUT main(VS_INPUT input)
 
     output.outTexCoord = input.inTexCoord;
 
-    output.normal = mul(input.normal, World);
+    output.normal = mul(input.normal, (float3x3)World);
     output.normal = normalize(output.normal);
     
 
     float4 worldPosition = mul(input.inPos, World);
-
+   
     output.lightPos = lightposition.xyz - worldPosition.xyz;
     output.lightPos = normalize(output.lightPos);
 

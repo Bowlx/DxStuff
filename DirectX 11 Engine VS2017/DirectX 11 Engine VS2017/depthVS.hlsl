@@ -1,16 +1,22 @@
 cbuffer mycBuffer : register(b0)
 {
 
-	float4x4 World;
-	float4x4 WVP;
-	float4x4 WVPlight;
+	matrix World;
+	matrix WVP;
+	matrix WVPlight;
+};
+cbuffer lightBuffer : register(b1)
+{
+
+	float3 lightposition;
 };
 
 struct VS_INPUT
 {
 	float3 inPos : POSITION;
+	float2 inTexCoord : TEXCOORD0;
 	float3 normal : NORMAL;
-	float2 inTexCoord : TEXCOORD;
+
 };
 
 struct PixelInputType

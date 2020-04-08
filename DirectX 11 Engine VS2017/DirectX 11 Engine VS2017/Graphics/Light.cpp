@@ -11,7 +11,12 @@ void Light::SetProjectionValues(float fovDegrees, float aspectRatio, float nearZ
 	float fovRadians = (fovDegrees / 360.0f) * XM_2PI;
 	float fieldOfView = (float)XM_PI / 2.0f;
 	float screenAspect = 1.0f;
-	this->projectionMatrix = XMMatrixPerspectiveFovLH(fovRadians, screenAspect, nearZ, farZ);
+	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, nearZ, farZ);
+	XMVECTOR d = XMVectorSet(15.0f, 25.0f, 15.0f, 0.0f);
+	this->pos = XMFLOAT3(15, 25, 0);
+	XMVECTOR dd = XMVectorSet(15.0f, 1.0f, 15.0f, 0.0f);
+	XMVECTOR Up = XMVectorSet(1.0f, 0.0f, 1.0f, 0.0f);
+	this->viewMatrix = XMMatrixLookAtLH(d, dd, Up);
 	
 }
 

@@ -34,13 +34,13 @@ float4 textureColor;
 // ”становка значени€ смещени€ используемого дл€ устранени€ проблем точности с плавающей зап€той
 float bias = 0.001f;
 
-float4 color = float4(ambient.x+0.7,ambient.y+0.7,ambient.z+0.7,1.0);
+float4 color = ambient;
 
 // ¬ычисление координат проецировани€ текстуры
 
 
-projectTexCoord.x = 0.5f + (input.lightViewPosition.x / input.lightViewPosition.w * 0.5f);
-projectTexCoord.y = 0.5f - (input.lightViewPosition.y / input.lightViewPosition.w * 0.5f);
+projectTexCoord.x = input.lightViewPosition.x / input.lightViewPosition.w / 2.0f + 0.5f;
+projectTexCoord.y = -input.lightViewPosition.y / input.lightViewPosition.w / 2.0f + 0.5f;
 
 // Ќаходитс€ ли спроецированные координаты в пределах 0 и 1. ≈сли да, то пиксель находитс€ в видимости света
 
@@ -49,39 +49,37 @@ if ((saturate(projectTexCoord.x) == projectTexCoord.x) && (saturate(projectTexCo
 	depthValue = depthMapTexture.Sample(clampSamplerState, projectTexCoord).r;
 
 	// ¬ычисление глубины света
-	lightDepthValue = input.lightViewPosition.x / input.lightViewPosition.w;
+	lightDepthValue = input.lightViewPosition.z / input.lightViewPosition.w;
 
 	// ¬ычитание смещени€ из lightDepthValue
+	
 	lightDepthValue = lightDepthValue - bias;
-
 	// —равнение глубины теневой карты и глубины света, дл€ определени€ того, освещен или затенен пиксель
 	// ≈сли свет перед объектом, то пиксель освещен; если нет, то пиксель затенен и объект бросает тень за ним
 	if (lightDepthValue < depthValue)
 	{
-		
 		// ¬ычисление количества света в пикселе
 		lightIntensity = saturate(dot(input.normal, input.lightPos));
-
+		lightDepthValue = lightDepthValue - bias ;
 		if (lightIntensity > 0.0f)
 		{
 			
-			lightIntensity *= 2;
+			
 			// ќпределение заключительного рассе€ного (diffuse) света на основе рассе€ного цвети и интенсивности света
 			color += (diffuse * lightIntensity);
 			
-			//color = saturate(color);
+			color = saturate(color);
 		}
 	}
+	
 }
-else {
-	discard;
-}
+
 
 
 
 textureColor = objTexture.Sample(objSamplerState, input.inTexCoord);
 
 
-return depthValue*color  * textureColor ;
+return  color* textureColor;
 
 }
