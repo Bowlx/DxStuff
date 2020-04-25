@@ -51,6 +51,7 @@ void Engine::Update()
 						if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 						if (!this->gfx.models[i].bounded) {
 							this->gfx.models[i].SetBounded(true);
+							this->gfx.catsIn++;
 							this->gfx.modelPlayer.AdjustScale(0.02);
 			
 							
@@ -85,7 +86,7 @@ void Engine::Update()
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
-					this->gfx.models[i].SetBounded(true);
+					this->gfx.models[i].SetBounded(true); this->gfx.catsIn++;
 					this->gfx.modelPlayer.AdjustScale(0.02);
 					
 				}
@@ -95,7 +96,7 @@ void Engine::Update()
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].getRotatorX())
 
 					*
-					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].updateRotatorZ(0.06f))
+					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].updateRotatorZ(0.006f* dt))
 
 				);
 				this->gfx.models[i].SetPosition(this->gfx.modelPlayer.GetPositionVector());
@@ -113,7 +114,7 @@ void Engine::Update()
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
-					this->gfx.models[i].SetBounded(true);
+					this->gfx.models[i].SetBounded(true); this->gfx.catsIn++;
 					this->gfx.modelPlayer.AdjustScale(0.02);
 		
 				}
@@ -122,7 +123,7 @@ void Engine::Update()
 					*
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].getRotatorX())
 					*
-					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].updateRotatorZ(-0.06f))
+					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].updateRotatorZ(-0.006f * dt))
 					
 					
 					);
@@ -139,7 +140,7 @@ void Engine::Update()
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
-					this->gfx.models[i].SetBounded(true);
+					this->gfx.models[i].SetBounded(true); this->gfx.catsIn++;
 					this->gfx.modelPlayer.AdjustScale(0.02);
 
 				}
@@ -149,7 +150,7 @@ void Engine::Update()
 					* 
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].getRotatorZ())
 					*
-					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(0.06)));
+					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(0.006f * dt)));
 			}
 		}
 		
@@ -166,7 +167,7 @@ void Engine::Update()
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
-					this->gfx.models[i].SetBounded(true);
+					this->gfx.models[i].SetBounded(true); this->gfx.catsIn++;
 					this->gfx.modelPlayer.AdjustScale(0.02);
 	
 				}
@@ -175,7 +176,7 @@ void Engine::Update()
 					* 
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].getRotatorZ())
 					*
-					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(-0.06)));
+					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(-0.006f * dt)));
 			}
 		}
 

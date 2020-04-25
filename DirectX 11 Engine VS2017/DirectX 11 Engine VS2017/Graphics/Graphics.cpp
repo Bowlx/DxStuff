@@ -6,6 +6,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	this->windowWidth = width;
 	this->windowHeight = height;
 	this->fpsTimer.Start();
+	this->deltaTimer.Start();
 
 	if (!InitializeDirectX(hwnd))
 		return false;
@@ -24,8 +25,26 @@ void Graphics::RenderFrame()
 {
 	
 	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-
+	float dt = deltaTimer.GetMilisecondsElapsed();
+	this->deltaTimer.Restart();
+	
+	static int fpsCounter = 0;
+	static std::string fpsString = "FPS: 0";
+	static std::string catsString = "ca";
+	static float scale = 1;
+	static float dir = 1;
+	scale += dir* dt*0.001;
+	if (scale > 1.5 ) dir = -1;
+	if (scale < 1) dir = 1;
+	fpsCounter += 1;
+	if (fpsTimer.GetMilisecondsElapsed() > 1000.0)
+	{
+		fpsString = "FPS: " + std::to_string(fpsCounter);
+		fpsCounter = 0;
+		fpsTimer.Restart();
+	}
+	catsString = "Cats Annihilated:" + std::to_string(catsIn);
+	
 	this->deviceContext->VSSetShader(depthvertexshader.GetShader(), NULL, 0);
 	this->deviceContext->PSSetShader(depthpixelshader.GetShader(), NULL, 0);
 	this->deviceContext->IASetInputLayout(this->depthvertexshader.GetInputLayout());
@@ -45,7 +64,6 @@ void Graphics::RenderFrame()
 
 
 	this->restoreTargets();
-	
 	light.setShaderResources(this->deviceContext.Get());
 	this->restoreTargets();
 	//
@@ -67,9 +85,20 @@ void Graphics::RenderFrame()
 		modelPlayer.SetPosition(camera.GetPositionVector() + camera.GetForwardVector()*6+ XMLoadFloat3(&ground));
 		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
-	
 
-	this->swapchain->Present(1, NULL);
+		spriteBatch->Begin();
+		spriteFont->DrawString(spriteBatch.get(), StringConverter::StringToWide(fpsString).c_str(), DirectX::XMFLOAT2(0, 0), DirectX::Colors::OrangeRed, 0.0f, DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT2(2.0f, 2.0f));
+		spriteFont->DrawString(spriteBatch.get(), StringConverter::StringToWide(catsString).c_str(), DirectX::XMFLOAT2(1600, 100), DirectX::Colors::WhiteSmoke, 0.0f, DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT2(scale, scale));
+		sprite->Update(dt * 0.02);
+		sprite->Draw(spriteBatch.get(), XMFLOAT2(0, 750));
+	
+		sprite1->Update(dt *0.02);
+		sprite1->Draw(spriteBatch.get(), XMFLOAT2(1550, 750));
+		spriteBatch->End();
+		this->restoreTargets();
+	this->swapchain->Present(0, NULL);
+
+
 }
 
 void Graphics::restoreTargets()
@@ -77,7 +106,6 @@ void Graphics::restoreTargets()
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
-
 	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->deviceContext->RSSetState(this->rasterizerState.Get());
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
@@ -204,6 +232,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		//hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create blend state.");
 
+		spriteBatch = std::make_unique<DirectX::SpriteBatch>(this->deviceContext.Get());
+		spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
+
 		//Create sampler description for sampler state
 		D3D11_SAMPLER_DESC samplerDesc;
 		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -309,6 +340,14 @@ bool Graphics::InitializeScene()
 		//Load Texture
 		HRESULT hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\cat.jpg", nullptr, catTexture.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
+		 hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\doget.png", nullptr, dog.ReleaseAndGetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create DDS texture from file.");
+		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\dogel.png", nullptr, dog1.ReleaseAndGetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create DDS texture from file.");
+		sprite = std::make_unique<AnimatedTexture>(XMFLOAT2(0, 0), 0.f, 1.f, 0.5f);
+		sprite->Load(dog.Get(), 30, 1);
+		sprite1 = std::make_unique<AnimatedTexture>(XMFLOAT2(0, 0), 0.f, 1.f, 0.5f);
+		sprite1->Load(dog1.Get(), 30, 1);
 
 		//Initialize Constant Buffer(s)
 		hr = this->cb_vs_vertexshader.Initialize(this->device.Get(), this->deviceContext.Get());
@@ -339,7 +378,7 @@ bool Graphics::InitializeScene()
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
 		if (!modelPlayer.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->playerTexture.Get(), this->cb_vs_vertexshader))
 			return false;
-		modelPlayer.SetPosition(0, -0.5  , 8);
+		modelPlayer.SetPosition(0, -1  , 8);
 		modelPlayer.SetScale(0.25, 0.25, 0.25);
 		
 		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\pinksquare.jpg", nullptr, planeTexture.GetAddressOf());
@@ -348,11 +387,11 @@ bool Graphics::InitializeScene()
 		
 		modelCube.SetScale(1000, 1, 10000);
 		modelCube.AdjustPosition(-100, 0, 1000);
-		camera.SetPosition(0.0f, 3.0f, 0.0f);
+		camera.SetPosition(0.0f, 2.7f, 0.0f);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
-		//light.SetPosition(15.0f, 25, 15.0f);
-		light.SetProjectionValues(90, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 5, 100.0f);
-		//light.SetLookAtPos(XMFLOAT3(16, 24, 15));
+		light.SetPosition(1.0f, 25, 1.0f);
+		light.SetProjectionValues(90, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 5	, 100.0f);
+		light.SetLookAtPos(XMFLOAT3(15, 1, 15));
 	}
 	catch (COMException & exception)
 	{

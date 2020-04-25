@@ -4,6 +4,8 @@
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 #include <WICTextureLoader.h>
+#include <DDSTextureLoader.h>
+#include "AnimatedTexture.h"
 #include "Camera.h"
 #include "..\\Timer.h"
 #include "Model.h"
@@ -20,10 +22,12 @@ public:
 	Model modelCube;
 	Light light;
 	std::vector<Model> models;
+	int catsIn = 0;
 	void restoreTargets();
 
 private:
 	const int shadowMapSize = 1024;
+
 	
 	bool InitializeDirectX(HWND hwnd);
 	bool InitializeShaders();
@@ -53,14 +57,23 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerState_CullFront;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> blendState;
 
+	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
+	std::unique_ptr<DirectX::SpriteFont> spriteFont;
+	std::unique_ptr<AnimatedTexture> sprite;
+	std::unique_ptr<AnimatedTexture> sprite1;
+
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSamplerState;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> catTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> playerTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dog;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dog1;
+	Microsoft::WRL::ComPtr<ID3D11Resource> resource;
 
 	int windowWidth = 0;
 	int windowHeight = 0;
 	Timer fpsTimer;
+	Timer deltaTimer;
 };

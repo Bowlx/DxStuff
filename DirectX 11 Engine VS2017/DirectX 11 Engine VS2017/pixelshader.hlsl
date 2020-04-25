@@ -60,7 +60,6 @@ if ((saturate(projectTexCoord.x) == projectTexCoord.x) && (saturate(projectTexCo
 	{
 		// ¬ычисление количества света в пикселе
 		lightIntensity = saturate(dot(input.normal, input.lightPos));
-		lightDepthValue = lightDepthValue - bias ;
 		if (lightIntensity > 0.0f)
 		{
 			
@@ -73,9 +72,6 @@ if ((saturate(projectTexCoord.x) == projectTexCoord.x) && (saturate(projectTexCo
 	}
 	
 }
-
-
-
 
 textureColor = objTexture.Sample(objSamplerState, input.inTexCoord);
 
