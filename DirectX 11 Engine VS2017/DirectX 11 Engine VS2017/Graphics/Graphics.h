@@ -3,6 +3,9 @@
 #include "Shaders.h"
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
+#include <d2d1.h>
+#include <d2d1_1.h>
+#include <dwrite.h>
 #include <WICTextureLoader.h>
 #include <DDSTextureLoader.h>
 #include "AnimatedTexture.h"
@@ -10,8 +13,8 @@
 #include "..\\Timer.h"
 #include "Model.h"
 #include "Light.h"
-
-
+#pragma comment(lib,"d2d1.lib")
+#pragma comment(lib,"dwrite.lib")
 class Graphics
 {
 public:
@@ -27,15 +30,37 @@ public:
 
 private:
 	const int shadowMapSize = 1024;
-
+	const wchar_t* wszText_;
+	UINT32 cTextLength_;
+	D2D1_RECT_F layoutRect;
+	RECT rect;
 	
 	bool InitializeDirectX(HWND hwnd);
 	bool InitializeShaders();
 	bool InitializeScene();
+	bool Initialize2dStuff(HWND hwnd);
 	
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
+	
+	Microsoft::WRL::ComPtr<IDWriteFactory> pDWriteFactory_;
+	Microsoft::WRL::ComPtr<IDWriteTextFormat> pTextFormat_;
+	Microsoft::WRL::ComPtr<IDWriteTextFormat> pTextFormatSans_;
+	Microsoft::WRL::ComPtr<ID2D1Factory1> pD2DFactory_;
+	Microsoft::WRL::ComPtr<ID2D1RenderTarget> m_pBackBufferRT;
+	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> pBlackBrush_;
+	Microsoft::WRL::ComPtr<IDWriteTextLayout> pTextLayout_;
+
+
+	Microsoft::WRL::ComPtr<IDXGIAdapter> dxgiAdapter;
+	Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+	Microsoft::WRL::ComPtr<ID2D1Device> m_d2dDevice;
+	Microsoft::WRL::ComPtr<ID2D1DeviceContext> m_d2dContext;
+	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_d2dTargetBitmap;
+	
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+	Microsoft::WRL::ComPtr<IDXGISurface> pBackBuffer;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> depthRenderTargetView;

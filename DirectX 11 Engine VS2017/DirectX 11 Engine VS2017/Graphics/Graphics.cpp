@@ -13,21 +13,24 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 	if (!InitializeShaders())
 		return false;
-
+	
 	if (!InitializeScene())
+		return false;
+	if (!Initialize2dStuff(hwnd))
 		return false;
 	if (!light.Initialize(this->device.Get(), this->deviceContext.Get()))
 		return false;
+	
 	return true;
 }
 
 void Graphics::RenderFrame()
 {
 	
-	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 0.5f };
 	float dt = deltaTimer.GetMilisecondsElapsed();
 	this->deltaTimer.Restart();
-	
+
 	static int fpsCounter = 0;
 	static std::string fpsString = "FPS: 0";
 	static std::string catsString = "ca";
@@ -65,7 +68,7 @@ void Graphics::RenderFrame()
 
 	this->restoreTargets();
 	light.setShaderResources(this->deviceContext.Get());
-	this->restoreTargets();
+	
 	//
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -86,17 +89,31 @@ void Graphics::RenderFrame()
 		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
+	
+
 		spriteBatch->Begin();
-		spriteFont->DrawString(spriteBatch.get(), StringConverter::StringToWide(fpsString).c_str(), DirectX::XMFLOAT2(0, 0), DirectX::Colors::OrangeRed, 0.0f, DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT2(2.0f, 2.0f));
-		spriteFont->DrawString(spriteBatch.get(), StringConverter::StringToWide(catsString).c_str(), DirectX::XMFLOAT2(1600, 100), DirectX::Colors::WhiteSmoke, 0.0f, DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT2(scale, scale));
-		sprite->Update(dt * 0.02);
+	    sprite->Update(dt * 0.02);
 		sprite->Draw(spriteBatch.get(), XMFLOAT2(0, 750));
 	
 		sprite1->Update(dt *0.02);
 		sprite1->Draw(spriteBatch.get(), XMFLOAT2(1550, 750));
 		spriteBatch->End();
+
+	
+		m_d2dContext->BeginDraw();
+		auto rec1 = D2D1::RectF(0.0f,-50, 800,300);
+		auto rec2 = D2D1::RectF(1200.0f, 100, 1800, 600);
+		pBlackBrush_->SetColor(D2D1::ColorF(D2D1::ColorF::WhiteSmoke));
+		m_d2dContext->DrawTextW(StringConverter::StringToWide(fpsString).c_str(), fpsString.length(),pTextFormat_.Get(),&rec1,pBlackBrush_.Get());
+		pBlackBrush_->SetColor(D2D1::ColorF(D2D1::ColorF::OrangeRed));
+		m_d2dContext->DrawTextW(StringConverter::StringToWide(catsString).c_str(), catsString.length(), pTextFormatSans_.Get(), &rec2, pBlackBrush_.Get());
+		m_d2dContext->EndDraw();
+	
+
+
 		this->restoreTargets();
-	this->swapchain->Present(0, NULL);
+	this->swapchain->Present(0, 0);
+
 
 
 }
@@ -134,13 +151,11 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.BufferDesc.Height = this->windowHeight;
 		scd.BufferDesc.RefreshRate.Numerator = 60;
 		scd.BufferDesc.RefreshRate.Denominator = 1;
-		scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		scd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-
 		scd.SampleDesc.Count = 1;
 		scd.SampleDesc.Quality = 0;
-
 		scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		scd.BufferCount = 1;
 		scd.OutputWindow = hwnd;
@@ -149,10 +164,14 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		HRESULT hr;
+
+		Microsoft::WRL::ComPtr<ID3D11Device> device;
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
+		UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 		hr = D3D11CreateDeviceAndSwapChain(adapters[0].pAdapter, //IDXGI Adapter
 			D3D_DRIVER_TYPE_UNKNOWN,
 			NULL, //FOR SOFTWARE DRIVER TYPE
-			NULL, //FLAGS FOR RUNTIME LAYERS
+			creationFlags, //FLAGS FOR RUNTIME LAYERS
 			NULL, //FEATURE LEVELS ARRAY
 			0, //# OF FEATURE LEVELS IN ARRAY
 			D3D11_SDK_VERSION,
@@ -163,14 +182,12 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 			this->deviceContext.GetAddressOf()); //Device Context Address
 
 		COM_ERROR_IF_FAILED(hr, "Failed to create device and swapchain.");
+		
 
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
 		hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
 		COM_ERROR_IF_FAILED(hr, "GetBuffer Failed.");
 
-
-		COM_ERROR_IF_FAILED(hr, "Failed to create render target buffer.");
-
+		
 		hr = this->device->CreateRenderTargetView(backBuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create render target view.");
 
@@ -233,7 +250,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		COM_ERROR_IF_FAILED(hr, "Failed to create blend state.");
 
 		spriteBatch = std::make_unique<DirectX::SpriteBatch>(this->deviceContext.Get());
-		spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
+		spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\lala.spritefont");
 
 		//Create sampler description for sampler state
 		D3D11_SAMPLER_DESC samplerDesc;
@@ -278,6 +295,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	}
 	return true;
 }
+
 
 bool Graphics::InitializeShaders()
 {
@@ -398,5 +416,71 @@ bool Graphics::InitializeScene()
 		ErrorLogger::Log(exception);
 		return false;
 	}
+	return true;
+}
+
+bool Graphics::Initialize2dStuff(HWND hwnd)
+{
+	HRESULT hr;
+
+	D2D1_FACTORY_OPTIONS options = {};
+	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory1), &options, &pD2DFactory_);
+	COM_ERROR_IF_FAILED(hr, "D2D1CreateFactory.");
+
+	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),&pDWriteFactory_);
+	COM_ERROR_IF_FAILED(hr, "DWriteCreateFactory.");
+	
+	hr = this->device.As(&dxgiDevice);
+	COM_ERROR_IF_FAILED(hr, "device.As.");
+
+	hr = pD2DFactory_->CreateDevice(dxgiDevice.Get(), &m_d2dDevice);
+	COM_ERROR_IF_FAILED(hr, "CreateDevice.");
+
+	hr = m_d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &m_d2dContext);
+	COM_ERROR_IF_FAILED(hr, "CreateDeviceContext.");
+
+	m_d2dContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &pBlackBrush_);
+
+	D2D1_BITMAP_PROPERTIES1 bitmapProperties =
+		D2D1::BitmapProperties1(
+			D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+			D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+			1,
+			1
+		);
+
+	Microsoft::WRL::ComPtr<IDXGISurface> dxgiBackBuffer;
+	hr = swapchain->GetBuffer(0, IID_PPV_ARGS(&dxgiBackBuffer));
+	COM_ERROR_IF_FAILED(hr, "GetBuffer.");
+
+	hr = m_d2dContext->CreateBitmapFromDxgiSurface(dxgiBackBuffer.Get(),&bitmapProperties,&m_d2dTargetBitmap);
+	COM_ERROR_IF_FAILED(hr, "CreateBitmapFromDxgiSurface.");
+
+	m_d2dContext->SetTarget(m_d2dTargetBitmap.Get());
+
+	m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+
+	hr = pDWriteFactory_->CreateTextFormat(
+		L"Gabriola",
+		NULL,
+		DWRITE_FONT_WEIGHT_REGULAR,
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		72.0f,
+		L"en-us",
+		&pTextFormat_
+	);
+
+	hr = pDWriteFactory_->CreateTextFormat(
+		L"Comic Sans MS",
+		NULL,
+		DWRITE_FONT_WEIGHT_REGULAR,
+		DWRITE_FONT_STYLE_NORMAL,
+		DWRITE_FONT_STRETCH_NORMAL,
+		36.0f,
+		L"en-us",
+		&pTextFormatSans_
+	);
+
 	return true;
 }
