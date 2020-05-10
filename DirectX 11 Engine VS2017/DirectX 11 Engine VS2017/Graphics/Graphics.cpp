@@ -26,8 +26,9 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 void Graphics::RenderFrame()
 {
-	
+	this->restoreTargets();
 	float bgcolor[] = { 0.0f, 0.0f, 0.0f, 0.5f };
+	static XMFLOAT3  ground = XMFLOAT3(0.0f, -2.0f, 0);
 	float dt = deltaTimer.GetMilisecondsElapsed();
 	this->deltaTimer.Restart();
 
@@ -66,11 +67,15 @@ void Graphics::RenderFrame()
 
 
 
-	this->restoreTargets();
+	this->restoreTargetsLum();
 	light.setShaderResources(this->deviceContext.Get());
+
 	
-	//
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
+	
+	
+	
+
+	this->deviceContext->ClearRenderTargetView(this->RTV.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -84,13 +89,39 @@ void Graphics::RenderFrame()
 		
 		}
 
-		static XMFLOAT3  ground = XMFLOAT3(0.0f, -2.0f, 0);
+		  ground = XMFLOAT3(0.0f, -2.0f, 0);
 		modelPlayer.SetPosition(camera.GetPositionVector() + camera.GetForwardVector()*6+ XMLoadFloat3(&ground));
 		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
 	
 
+		this->restoreTargets();
+		light.setShaderResources(this->deviceContext.Get());
+		deviceContext->GenerateMips(this->SRV);
+		deviceContext->PSSetShaderResources(2, 1, &this->SRV);
+	
+		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);
+		this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+		this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		this->cb_ps_lightBuffer.ApplyChanges();
+		this->deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
+		for (auto i = 0; i < models.size(); i++)
+		{
+
+
+			models[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+
+		}
+
+	  ground = XMFLOAT3(0.0f, -2.0f, 0);
+		modelPlayer.SetPosition(camera.GetPositionVector() + camera.GetForwardVector() * 6 + XMLoadFloat3(&ground));
+		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+
+	
+	
 		spriteBatch->Begin();
 	    sprite->Update(dt * 0.02);
 		sprite->Draw(spriteBatch.get(), XMFLOAT2(0, 750));
@@ -99,7 +130,6 @@ void Graphics::RenderFrame()
 		sprite1->Draw(spriteBatch.get(), XMFLOAT2(1550, 750));
 		spriteBatch->End();
 
-	
 		m_d2dContext->BeginDraw();
 		auto rec1 = D2D1::RectF(0.0f,-50, 800,300);
 		auto rec2 = D2D1::RectF(1200.0f, 100, 1800, 600);
@@ -108,8 +138,10 @@ void Graphics::RenderFrame()
 		pBlackBrush_->SetColor(D2D1::ColorF(D2D1::ColorF::OrangeRed));
 		m_d2dContext->DrawTextW(StringConverter::StringToWide(catsString).c_str(), catsString.length(), pTextFormatSans_.Get(), &rec2, pBlackBrush_.Get());
 		m_d2dContext->EndDraw();
-	
 
+		
+	
+		deviceContext->PSSetShaderResources(3, 1, &this->SRV);
 
 		this->restoreTargets();
 	this->swapchain->Present(0, 0);
@@ -129,7 +161,27 @@ void Graphics::restoreTargets()
 	this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetSamplers(1, 1, this->clampSamplerState.GetAddressOf());
-	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+
+	ID3D11RenderTargetView* rtv[2] = { renderTargetView.Get(),
+	RTV.Get() };
+	
+	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	//this->deviceContext->OMSetRenderTargets(2, rtv, this->depthStencilView.Get());
+	this->deviceContext->RSSetViewports(1, &viewport);
+}
+void Graphics::restoreTargetsLum()
+{
+	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);
+	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
+	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
+	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->deviceContext->RSSetState(this->rasterizerState.Get());
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+	this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+	this->deviceContext->PSSetSamplers(1, 1, this->clampSamplerState.GetAddressOf());
+	
+	this->deviceContext->OMSetRenderTargets(1, RTV.GetAddressOf(), this->depthStencilView.Get());
 	this->deviceContext->RSSetViewports(1, &viewport);
 }
 
@@ -151,7 +203,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		scd.BufferDesc.Height = this->windowHeight;
 		scd.BufferDesc.RefreshRate.Numerator = 60;
 		scd.BufferDesc.RefreshRate.Denominator = 1;
-		scd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		scd.BufferDesc.Format = gammaCorrection ? DXGI_FORMAT_B8G8R8A8_UNORM_SRGB : DXGI_FORMAT_B8G8R8A8_UNORM;
 		scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 		scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 		scd.SampleDesc.Count = 1;
@@ -191,9 +243,42 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = this->device->CreateRenderTargetView(backBuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create render target view.");
 
+
+
+		D3D11_TEXTURE2D_DESC textureDesc = {};
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+		textureDesc.Width = this->windowWidth;
+		textureDesc.Height = this->windowHeight;
+		textureDesc.MipLevels = 0;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+		hr = this->device->CreateTexture2D(&textureDesc, nullptr, RTTexture.GetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create CreateTexture2D.");
+		
+		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+		renderTargetViewDesc.Format = textureDesc.Format;
+		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderTargetViewDesc.Texture2D.MipSlice = 0;
+		hr = this->device->CreateRenderTargetView(RTTexture.Get(), &renderTargetViewDesc, RTV.GetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create CreateRenderTargetView.");
+		
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = textureDesc.Format;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = -1;
+		srvDesc.Texture2D.MostDetailedMip = -1;
+		hr = this->device->CreateShaderResourceView(RTTexture.Get(), nullptr, &SRV);
+		COM_ERROR_IF_FAILED(hr, "Failed to CreateShaderResourceView");
+
+		
 		//Describe our Depth/Stencil Buffer
 		CD3D11_TEXTURE2D_DESC depthStencilTextureDesc(DXGI_FORMAT_D24_UNORM_S8_UINT, this->windowWidth, this->windowHeight);
-		depthStencilTextureDesc.MipLevels = 1;
+		depthStencilTextureDesc.MipLevels = 0;
 		depthStencilTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
 		hr = this->device->CreateTexture2D(&depthStencilTextureDesc, NULL, this->depthStencilTex.GetAddressOf());
@@ -277,16 +362,8 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		hr = this->device->CreateSamplerState(&samplerDesc, this->clampSamplerState.GetAddressOf()); //Create sampler state
 		COM_ERROR_IF_FAILED(hr, "Failed to create sampler state.");
 
-		this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);
-		this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
-		this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
-		this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		this->deviceContext->RSSetState(this->rasterizerState.Get());
-		this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
-		this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
-		this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
-		this->deviceContext->PSSetSamplers(1, 1, this->clampSamplerState.GetAddressOf());
-		this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+		this->restoreTargets();
+		
 	}
 	catch (COMException & exception)
 	{
@@ -356,8 +433,11 @@ bool Graphics::InitializeScene()
 	try
 	{
 		//Load Texture
-		HRESULT hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\cat.jpg", nullptr, catTexture.GetAddressOf());
-		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
+		D3D11_USAGE use = {};
+		HRESULT hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\cat.jpg", nullptr, catTexture.ReleaseAndGetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create DDS texture from file.");
+
+		
 		 hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\doget.png", nullptr, dog.ReleaseAndGetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create DDS texture from file.");
 		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\dogel.png", nullptr, dog1.ReleaseAndGetAddressOf());
@@ -378,6 +458,7 @@ bool Graphics::InitializeScene()
 		Model in;
 		if (!in.Initialize("Data\\Objects\\cat.obj", this->device.Get(), this->deviceContext.Get(), this->catTexture.Get(), this->cb_vs_vertexshader))
 			return false;
+
 		for (auto j = 1; j <= 6; j++)
 		{
 			for (auto i = 0; i <= 10; i++)
@@ -387,8 +468,10 @@ bool Graphics::InitializeScene()
 				in.SetPosition( (get_random()* get_random()), 0.3, get_random()* get_random());
 				in.SetScale(0.10 * j, 0.10 * j, 0.10 * j);
 				in.SetRotation(0, get_random(), 0);
-				models.push_back(in);
-
+				
+	
+					models.push_back(in);
+			
 			}
 		}
 
@@ -444,7 +527,7 @@ bool Graphics::Initialize2dStuff(HWND hwnd)
 	D2D1_BITMAP_PROPERTIES1 bitmapProperties =
 		D2D1::BitmapProperties1(
 			D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-			D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
+			D2D1::PixelFormat(gammaCorrection ? DXGI_FORMAT_B8G8R8A8_UNORM_SRGB : DXGI_FORMAT_B8G8R8A8_UNORM , D2D1_ALPHA_MODE_PREMULTIPLIED),
 			1,
 			1
 		);

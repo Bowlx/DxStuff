@@ -27,9 +27,11 @@ public:
 	std::vector<Model> models;
 	int catsIn = 0;
 	void restoreTargets();
+	void restoreTargetsLum();
 
 private:
 	const int shadowMapSize = 1024;
+	const bool gammaCorrection = true;
 	const wchar_t* wszText_;
 	UINT32 cTextLength_;
 	D2D1_RECT_F layoutRect;
@@ -58,8 +60,15 @@ private:
 	Microsoft::WRL::ComPtr<ID2D1Device> m_d2dDevice;
 	Microsoft::WRL::ComPtr<ID2D1DeviceContext> m_d2dContext;
 	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_d2dTargetBitmap;
-	
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+	
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> RTTexture;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RTV;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DSV;
+	ID3D11ShaderResourceView* SRV;
+	
+	
 	Microsoft::WRL::ComPtr<IDXGISurface> pBackBuffer;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView;
@@ -68,6 +77,7 @@ private:
 	PixelShader depthpixelshader;
 	VertexShader vertexshader;
 	PixelShader pixelshader;
+	PixelShader pixelshaderLum;
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_lightBuffer> cb_ps_lightBuffer;
 	CD3D11_VIEWPORT viewport;
