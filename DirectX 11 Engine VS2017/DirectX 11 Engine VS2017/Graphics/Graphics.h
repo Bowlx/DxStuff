@@ -23,6 +23,7 @@ public:
 	Camera camera;
 	Model modelPlayer;
 	Model modelCube;
+	Model skybox;
 	Light light;
 	std::vector<Model> models;
 	int catsIn = 0;
@@ -31,7 +32,7 @@ public:
 
 private:
 	const int shadowMapSize = 1024;
-	const bool gammaCorrection = true;
+	const bool gammaCorrection = false;
 	const wchar_t* wszText_;
 	UINT32 cTextLength_;
 	D2D1_RECT_F layoutRect;
@@ -77,7 +78,8 @@ private:
 	PixelShader depthpixelshader;
 	VertexShader vertexshader;
 	PixelShader pixelshader;
-	PixelShader pixelshaderLum;
+	PixelShader skyshaderPS;
+	VertexShader skyshaderVS;
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_lightBuffer> cb_ps_lightBuffer;
 	CD3D11_VIEWPORT viewport;
@@ -99,6 +101,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> clampSamplerState;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyboxTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shadowTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> catTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> playerTexture;

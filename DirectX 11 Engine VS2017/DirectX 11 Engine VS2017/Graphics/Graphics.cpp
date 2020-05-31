@@ -77,8 +77,8 @@ void Graphics::RenderFrame()
 
 	this->deviceContext->ClearRenderTargetView(this->RTV.Get(), bgcolor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->cb_ps_lightBuffer.data.ambient = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	this->cb_ps_lightBuffer.data.diffuse = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 	this->cb_ps_lightBuffer.ApplyChanges();
 	this->deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
 	for(auto i =0; i< models.size();i++)	
@@ -117,10 +117,13 @@ void Graphics::RenderFrame()
 
 	  ground = XMFLOAT3(0.0f, -2.0f, 0);
 		modelPlayer.SetPosition(camera.GetPositionVector() + camera.GetForwardVector() * 6 + XMLoadFloat3(&ground));
-		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+
 		modelCube.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
-	
+		this->deviceContext->PSSetShader(skyshaderPS.GetShader(), NULL, 0);
+		this->deviceContext->VSSetShader(skyshaderVS.GetShader(), NULL, 0);
+		skybox.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
+		modelPlayer.DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 	
 		spriteBatch->Begin();
 	    sprite->Update(dt * 0.02);
@@ -308,6 +311,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 		//Create Rasterizer State
 		CD3D11_RASTERIZER_DESC rasterizerDesc(D3D11_DEFAULT);
+		rasterizerDesc.CullMode = D3D11_CULL_NONE;
 		hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create rasterizer state.");
 
@@ -417,6 +421,12 @@ bool Graphics::InitializeShaders()
 
 	if (!depthpixelshader.Initialize(this->device, shaderfolder + L"depthPS.cso"))
 		return false;
+	
+	if (!skyshaderPS.Initialize(this->device, shaderfolder + L"skyPS.cso"))
+		return false;
+
+	if (!skyshaderVS.Initialize(this->device, shaderfolder + L"skyVS.cso", layout, numElements))
+		return false;
 
 	
 	return true;
@@ -447,6 +457,8 @@ bool Graphics::InitializeScene()
 		sprite1 = std::make_unique<AnimatedTexture>(XMFLOAT2(0, 0), 0.f, 1.f, 0.5f);
 		sprite1->Load(dog1.Get(), 30, 1);
 
+		hr = CreateDDSTextureFromFileEx(this->device.Get(), this->deviceContext.Get(), L"Data\\Textures\\skymap.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, D3D11_RESOURCE_MISC_TEXTURECUBE, false,nullptr, skyboxTexture.ReleaseAndGetAddressOf());
+		COM_ERROR_IF_FAILED(hr, "Failed to create DDS texture from file.");
 		//Initialize Constant Buffer(s)
 		hr = this->cb_vs_vertexshader.Initialize(this->device.Get(), this->deviceContext.Get());
 		COM_ERROR_IF_FAILED(hr, "Failed to initialize constant buffer.");
@@ -477,7 +489,13 @@ bool Graphics::InitializeScene()
 
 		 hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\seamless_grass.jpg", nullptr, playerTexture.GetAddressOf());
 		COM_ERROR_IF_FAILED(hr, "Failed to create wic texture from file.");
-		if (!modelPlayer.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->playerTexture.Get(), this->cb_vs_vertexshader))
+
+		if (!skybox.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->skyboxTexture.Get(), this->cb_vs_vertexshader))
+			return false;
+		skybox.SetPosition(0, 10, 0);
+		skybox.SetScale(100, 100, 100);
+		
+		if (!modelPlayer.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->skyboxTexture.Get(), this->cb_vs_vertexshader))
 			return false;
 		modelPlayer.SetPosition(0, -1  , 8);
 		modelPlayer.SetScale(0.25, 0.25, 0.25);
@@ -486,8 +504,8 @@ bool Graphics::InitializeScene()
 		if (!modelCube.Initialize("Data\\Objects\\cube.obj", this->device.Get(), this->deviceContext.Get(), this->planeTexture.Get(), this->cb_vs_vertexshader))
 			return false;
 		
-		modelCube.SetScale(1000, 1, 10000);
-		modelCube.AdjustPosition(-100, 0, 1000);
+		modelCube.SetScale(200, 1, 2000);
+		modelCube.AdjustPosition(0, 0, 1000);
 		camera.SetPosition(0.0f, 2.7f, 0.0f);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
 		light.SetPosition(1.0f, 25, 1.0f);

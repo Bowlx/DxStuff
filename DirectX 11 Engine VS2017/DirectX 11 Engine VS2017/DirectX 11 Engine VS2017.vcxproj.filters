@@ -163,13 +163,19 @@
     <FxCompile Include="vertexshader.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
-    <FxCompile Include="pixelshader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="depthPS.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="depthVS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="pixelshader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="skyVS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="skyPS.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>
