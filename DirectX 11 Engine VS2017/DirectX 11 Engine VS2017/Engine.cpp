@@ -41,12 +41,12 @@ void Engine::Update()
 		{
 			if (me.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
-				this->gfx.camera.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
+				this->gfx.camera.AdjustRotation((float)me.GetPosY() * 0.01f, (float)me.GetPosX() * 0.01f, 0);
 				//this->gfx.light.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
-				this->gfx.modelPlayer.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
+				//this->gfx.modelPlayer.AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
 				for (auto i = 0; i < this->gfx.models.size(); i++)
 				{
-					if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
+					/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
 					{
 						if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 						if (!this->gfx.models[i].bounded) {
@@ -66,7 +66,7 @@ void Engine::Update()
 
 						);
 						this->gfx.models[i].AdjustRotation(0, (float)me.GetPosX() * 0.01f, 0);
-					}
+					}*/
 				}
 				
 			}
@@ -82,7 +82,7 @@ void Engine::Update()
 		this->gfx.modelPlayer.AdjustPosition(this->gfx.camera.GetForwardVector() * cameraSpeed * dt);
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{
-			if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
+			/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
@@ -100,7 +100,7 @@ void Engine::Update()
 
 				);
 				this->gfx.models[i].SetPosition(this->gfx.modelPlayer.GetPositionVector());
-			}
+			}*/
 		}
 	}
 	if (keyboard.KeyIsPressed('S'))
@@ -110,7 +110,7 @@ void Engine::Update()
 
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{
-			if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
+			/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
@@ -127,7 +127,7 @@ void Engine::Update()
 					
 					
 					);
-			}
+			}*/
 		}
 	}
 	if (keyboard.KeyIsPressed('A'))
@@ -136,7 +136,7 @@ void Engine::Update()
 		this->gfx.modelPlayer.AdjustPosition(this->gfx.camera.GetLeftVector() * cameraSpeed * dt);
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{
-			if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
+			/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
@@ -151,7 +151,7 @@ void Engine::Update()
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].getRotatorZ())
 					*
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(0.006f * dt)));
-			}
+			}*/
 		}
 		
 		
@@ -163,7 +163,7 @@ void Engine::Update()
 
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{
-			if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
+			/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
 			{
 				if (this->gfx.modelPlayer.getScale() < this->gfx.models[i].getScale()) return;
 				if (!this->gfx.models[i].bounded) {
@@ -177,10 +177,18 @@ void Engine::Update()
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetRightVector(), this->gfx.models[i].getRotatorZ())
 					*
 					XMMatrixRotationAxis(this->gfx.modelPlayer.GetForwardVector(), this->gfx.models[i].updateRotatorX(-0.006f * dt)));
-			}
+			}*/
 		}
 
 		
+	}
+	if (keyboard.KeyIsPressed(VK_SPACE))
+	{
+		this->gfx.camera.AdjustPosition(0.0f, cameraSpeed * dt, 0.0f);
+	}
+	if (keyboard.KeyIsPressed('Z'))
+	{
+		this->gfx.camera.AdjustPosition(0.0f, -cameraSpeed * dt, 0.0f);
 	}
 
 }

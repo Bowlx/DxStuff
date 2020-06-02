@@ -17,6 +17,8 @@ struct VS_INPUT
 	float2 inTexCoord : TEXCOORD0;
 	float3 normal : NORMAL;
 
+
+
 };
 
 struct PixelInputType

@@ -20,12 +20,14 @@ class Graphics
 public:
 	bool Initialize(HWND hwnd, int width, int height);
 	void RenderFrame();
+	void renderObjects(bool);
 	Camera camera;
 	Model modelPlayer;
 	Model modelCube;
 	Model skybox;
 	Light light;
 	std::vector<Model> models;
+	std::vector<Model> lights;
 	int catsIn = 0;
 	void restoreTargets();
 	void restoreTargetsLum();
@@ -41,7 +43,12 @@ private:
 	bool InitializeDirectX(HWND hwnd);
 	bool InitializeShaders();
 	bool InitializeScene();
+	bool defferedInitialize();
+	
 	bool Initialize2dStuff(HWND hwnd);
+
+	void renderDeferredGeometry();
+	void renderDeferredlightPass();
 	
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
@@ -74,14 +81,30 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapchain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> depthRenderTargetView;
+
+	ID3D11RenderTargetView* renderTargetViewArray[3];
+	ID3D11ShaderResourceView* shaderResourceViewArray[3];
+	ID3D11Texture2D* renderTargetTextureArray[3];
+	ID3D11DepthStencilState* depthStateDR;
+	
 	VertexShader depthvertexshader;
 	PixelShader depthpixelshader;
 	VertexShader vertexshader;
 	PixelShader pixelshader;
 	PixelShader skyshaderPS;
 	VertexShader skyshaderVS;
+
+	PixelShader deferredshaderPS;
+	VertexShader deferredshaderVS;
+
+	PixelShader deferredlightPS;
+	VertexShader deferredlightVS;
+
+	PixelShader dirlightPS;
+	VertexShader dirlightVS;
 	ConstantBuffer<CB_VS_vertexshader> cb_vs_vertexshader;
 	ConstantBuffer<CB_PS_lightBuffer> cb_ps_lightBuffer;
+	ConstantBuffer<CB_PS_DirlightBuffer> cb_ps_dirlightBuffer;
 	CD3D11_VIEWPORT viewport;
 
 	/*Microsoft::WRL::ComPtr<ID3D11Texture2D> shadowMapTex;*/
@@ -106,8 +129,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> catTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> playerTexture;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeTexture;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dog;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dog1;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeTextureNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stonesTexture;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stonesTextureNormal;
 	Microsoft::WRL::ComPtr<ID3D11Resource> resource;
 
 	int windowWidth = 0;

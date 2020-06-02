@@ -12,4 +12,5 @@ struct Vertex    //Overloaded Vertex Structure
     DirectX::XMFLOAT3 pos;
     DirectX::XMFLOAT2 texCoord;
     DirectX::XMFLOAT3 normal;
+ 
 };

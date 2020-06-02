@@ -7,6 +7,38 @@ bool Model::Initialize(const std::string & filePath, ID3D11Device * device, ID3D
 	this->deviceContext = deviceContext;
 	this->texture = texture;
 	this->cb_vs_vertexshader = &cb_vs_vertexshader;
+	this->file = filePath;
+	bounded = false;
+	rotatorZ = 0;
+	rotatorX = 0;
+
+	try
+	{
+		if (!this->LoadModel(filePath))
+			return false;
+	}
+	catch (COMException & exception)
+	{
+		ErrorLogger::Log(exception);
+		return false;
+	}
+
+	this->SetPosition(0.0f, 0.0f, 0.0f);
+	this->SetRotation(0.0f, 0.0f, 0.0f);
+	this->SetScale(1, 1, 1);
+	this->UpdateWorldMatrix();
+	return true;
+}
+
+bool Model::Initialize(const std::string& filePath, ID3D11Device* device, ID3D11DeviceContext* deviceContext,
+	ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* textureNormal,
+	ConstantBuffer<CB_VS_vertexshader>& cb_vs_vertexshader)
+{
+	this->device = device;
+	this->deviceContext = deviceContext;
+	this->texture = texture;
+	this->textureNormal = textureNormal;
+	this->cb_vs_vertexshader = &cb_vs_vertexshader;
 	bounded = false;
 	rotatorZ = 0;
 	rotatorX = 0;
@@ -30,7 +62,6 @@ bool Model::Initialize(const std::string & filePath, ID3D11Device * device, ID3D
 }
 
 
-
 void Model::SetTexture(ID3D11ShaderResourceView * texture)
 {
 	this->texture = texture;
@@ -45,7 +76,8 @@ void Model::Draw(const XMMATRIX & viewProjectionMatrix)
 	this->cb_vs_vertexshader->ApplyChanges();
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->cb_vs_vertexshader->GetAddressOf());
 
-	this->deviceContext->PSSetShaderResources(0, 1, &this->texture); //Set Texture
+	this->deviceContext->PSSetShaderResources(0, 1, &this->texture);
+
 
 	for (int i = 0; i < meshes.size(); i++)
 	{
@@ -63,7 +95,9 @@ void Model::DrawToDepth(const XMMATRIX& viewProjectionMatrix, const XMMATRIX& li
 	this->cb_vs_vertexshader->ApplyChanges();
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->cb_vs_vertexshader->GetAddressOf());
 
-	this->deviceContext->PSSetShaderResources(0, 1, &this->texture); //Set Texture
+	this->deviceContext->PSSetShaderResources(0, 1, &this->texture);
+	
+
 
 	for (int i = 0; i < meshes.size(); i++)
 	{
@@ -113,7 +147,7 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene)
 	for (UINT i = 0; i < mesh->mNumVertices; i++)
 	{
 		Vertex vertex;
-
+	
 		vertex.pos.x = mesh->mVertices[i].x;
 		vertex.pos.y = mesh->mVertices[i].y;
 		vertex.pos.z = mesh->mVertices[i].z;
@@ -131,6 +165,8 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene)
 		vertices.push_back(vertex);
 	}
 
+	
+
 	//Get indices
 	for (UINT i = 0; i < mesh->mNumFaces; i++)
 	{
@@ -139,6 +175,9 @@ Mesh Model::ProcessMesh(aiMesh * mesh, const aiScene * scene)
 		for (UINT j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
 	}
+
+	
+	
 
 	return Mesh(this->device, this->deviceContext, vertices, indices);
 }

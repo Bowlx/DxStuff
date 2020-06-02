@@ -8,9 +8,11 @@ struct PS_INPUT
 {
     float4 inPosition : SV_POSITION;
 	float4 lightViewPosition : TEXCOORD1;
+	float4 outWorld:TEXCOORD3;
     float3 normal : NORMAL;
     float3 lightPos : TEXCOORD2;
 	float2 inTexCoord : TEXCOORD0;
+
 };
 
 struct PS_OUTPUT {
@@ -19,6 +21,7 @@ struct PS_OUTPUT {
 };
 
 Texture2D objTexture : TEXTURE : register(t0);
+Texture2D objNormalTexture : TEXTURE: register(t4);
 Texture2D depthMapTexture : TEXTURE1 : register(t1);
 Texture2D curLumiTexture : TEXTURE2: register(t2);
 Texture2D prevLumiTexture : TEXTURE2: register(t3);
@@ -102,7 +105,7 @@ else {
 }
 
 
-
+return float4(input.outWorld);
 
 return color * textureColor;
 

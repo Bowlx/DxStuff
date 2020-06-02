@@ -16,10 +16,19 @@ struct CB_PS_pixelshader
 
 struct CB_PS_lightBuffer
 {
-	DirectX::XMFLOAT4 diffuse;
-	DirectX::XMFLOAT4 ambient;
+	DirectX::XMFLOAT3 cameraPosition;
+	DirectX::XMFLOAT3 lightColor;
+	DirectX::XMFLOAT3 lightPos;
 
 	
+};
+struct CB_PS_DirlightBuffer
+{
+
+	DirectX::XMFLOAT3 lightColor;
+	DirectX::XMFLOAT3 lightDir;
+
+
 };
 
 struct lightbuff
