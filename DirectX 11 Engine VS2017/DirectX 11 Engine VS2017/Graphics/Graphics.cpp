@@ -43,8 +43,8 @@ void Graphics::RenderFrame()
 
 	deviceContext->OMSetBlendState(blendState.Get(), blend, 0xFFFFFFFF);
 	deviceContext->OMSetDepthStencilState(depthStateDR, 0);
-	deviceContext->PSSetShaderResources(1, 3, shaderResourceViewArray);
-
+	deviceContext->PSSetShaderResources(1, 1, &shaderResourceViewArray[2]);
+	deviceContext->PSSetShaderResources(2, 1, &shaderResourceViewArray[0]);
 	ID3D11Buffer* nothing = 0;
 	this->deviceContext->PSSetShader(dirlightPS.GetShader(), NULL, 0);
 	this->deviceContext->VSSetShader(dirlightVS.GetShader(), NULL, 0);
@@ -56,8 +56,8 @@ void Graphics::RenderFrame()
 	
 	
 	
-	this->cb_ps_dirlightBuffer.data.lightColor = XMFLOAT3(0.5f, 0.5f, 0.5f);
-	this->cb_ps_dirlightBuffer.data.lightDir = XMFLOAT3(0, 0, -10);
+	this->cb_ps_dirlightBuffer.data.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	this->cb_ps_dirlightBuffer.data.lightDir = XMFLOAT3(0, +10, -10);
 	this->cb_ps_dirlightBuffer.ApplyChanges();
 	deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_dirlightBuffer.GetAddressOf());
 
@@ -96,7 +96,10 @@ void Graphics::RenderFrame()
 		this->cb_ps_lightBuffer.data.lightPos = lights[i].GetPositionFloat3();
 		this->cb_ps_lightBuffer.ApplyChanges();
 		deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_lightBuffer.GetAddressOf());
-		deviceContext->PSSetShaderResources(1, 3, shaderResourceViewArray);
+		
+		deviceContext->PSSetShaderResources(1, 1, &shaderResourceViewArray[2]);
+		deviceContext->PSSetShaderResources(2, 1, &shaderResourceViewArray[1]);
+		deviceContext->PSSetShaderResources(3, 1, &shaderResourceViewArray[0]);
 		lights[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
 	}
@@ -404,7 +407,7 @@ bool Graphics::InitializeShaders()
 	UINT numElementsDR = ARRAYSIZE(layoutDR);
 	
 
-	if (!vertexshader.Initialize(this->device, shaderfolder + L"vertexshader.cso", layout, numElements))
+	/*if (!vertexshader.Initialize(this->device, shaderfolder + L"vertexshader.cso", layout, numElements))
 		return false;
 
 	if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshader.cso"))
@@ -418,8 +421,8 @@ bool Graphics::InitializeShaders()
 	if (!skyshaderPS.Initialize(this->device, shaderfolder + L"skyPS.cso"))
 		return false;
 
-	if (!skyshaderVS.Initialize(this->device, shaderfolder + L"skyVS.cso", layout, numElements))
-		return false;
+	if (!skyshaderVS.Initialize(this->device, shaderfolder + L"skyVS.cso", layout, numElements))*/
+		//return false;
 	
 	if (!deferredshaderPS.Initialize(this->device, shaderfolder + L"deferredpixelshader.cso"))
 		return false;
@@ -489,43 +492,43 @@ bool Graphics::InitializeScene()
 			return false;
 
 
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(2.0f, -2.0f, 0.0f);
-		models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(2.0f, -2.0f, 2.0f);
-		models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(0.0f, -2.0f, 0.0f);
-		models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(0.0f, -2.0f, 2.0f);
-		models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(-2.0f, -2.0f, 0.0f);
-		models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(-2.0f, -2.0f, 2.0f);
-		models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(2.0f, -2.0f, 0.0f);
+		//models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(2.0f, -2.0f, 2.0f);
+		//models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(0.0f, -2.0f, 0.0f);
+		//models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(0.0f, -2.0f, 2.0f);
+		//models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(-2.0f, -2.0f, 0.0f);
+		//models.push_back(in);
+		//in.SetScale(1.0f, 1.0f, 1.0f);
+		//in.SetPosition(-2.0f, -2.0f, 2.0f);
+		//models.push_back(in);
 
 		if (!modelCube.Initialize("Data\\Objects\\cube.obj", this->device.Get(), this->deviceContext.Get(), this->planeTexture.Get(), this->planeTextureNormal.Get(), this->cb_vs_vertexshader))
 			return false;
 
-		modelCube.SetScale(5.0f, 0.01f, 5.5f);
+		/*modelCube.SetScale(5.0f, 0.01f, 5.5f);
 		modelCube.SetPosition(0.0f, -3.5f, 0.0f);
-		models.push_back(modelCube);
+		models.push_back(modelCube);*/
 		//Right
-		modelCube.SetScale(0.01f, 3.5f, 5.5f);
+		modelCube.SetScale(0.01f, 6.5f, 5.5f);
 		modelCube.SetPosition(2.5f, -2.0f, 0.5f);
 		models.push_back(modelCube);
 		//Left
-		modelCube.SetScale(0.01f, 3.5f, 5.5f);
-		modelCube.SetPosition(-2.5f, -2.0f, 0.5f);
-		models.push_back(modelCube);
-		//Back
-		modelCube.SetScale(5.0f, 3.5f, 0.01f);
-		modelCube.SetPosition(0.0f, -2.0f, 3.0f);
-		models.push_back(modelCube);
+		//modelCube.SetScale(0.01f, 3.5f, 5.5f);
+		//modelCube.SetPosition(-2.5f, -2.0f, 0.5f);
+		//models.push_back(modelCube);
+		////Back
+		//modelCube.SetScale(5.0f, 3.5f, 0.01f);
+		//modelCube.SetPosition(0.0f, -2.0f, 3.0f);
+		//models.push_back(modelCube);
 
 
 	/*	in.SetScale(5.0f, 5.0f, 5.0f);
@@ -554,12 +557,12 @@ bool Graphics::InitializeScene()
 		lights.push_back(in);
 		
 		in.SetScale(5, 5, 5);
-		in.SetPosition(-2.0f, 0.0f, 1.0f);
+		in.SetPosition(2.0f, 2.0f, 1.0f);
 		in.lightcolor = XMFLOAT3(0.0f, 0.6f, 0.4f);
 		lights.push_back(in);*/
+		in.SetPosition(2, 0, 1.3f);
 		in.SetScale(5, 5, 5);
-		in.SetPosition(2, -2, 1.0f);
-		in.lightcolor = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		in.lightcolor = XMFLOAT3(0.3f, 0.0f, 0.7f);
 		lights.push_back(in);
 		
 
@@ -577,7 +580,7 @@ bool Graphics::InitializeScene()
 		
 	
 	
-		camera.SetPosition(0.0f, -1.0f, -3.0f);
+		camera.SetPosition(0.0f, 0, -5);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
 		
 	}
@@ -748,7 +751,7 @@ void Graphics::renderDeferredGeometry()
 	this->deviceContext->VSSetShader(deferredshaderVS.GetShader(), NULL, 0);
 	this->deviceContext->PSSetShader(deferredshaderPS.GetShader(), NULL, 0);
 	
-	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());
+	this->deviceContext->IASetInputLayout(this->deferredshaderVS.GetInputLayout());
 	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->deviceContext->RSSetState(this->rasterizerState.Get());
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);

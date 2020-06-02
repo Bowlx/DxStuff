@@ -4,12 +4,13 @@ cbuffer ExternalData : register(b0)
 	float3 lightDir;
 }
 
-Texture2D objTexture : register(t0);
-Texture2D positionGB	: register(t1);
-Texture2D normalGB		: register(t2);
-Texture2D diffuseGB		: register(t3);
+Texture2D Position	: register(t0);
+Texture2D NormalMap		: register(t1);
+Texture2D Texture	: register(t2);
 
-
+//Texture2D Position	: register(t2);
+//Texture2D diff		: register(t1);
+//Texture2D Texture	: register(t0);
 
 
 SamplerState Sampler	: register(s0);
@@ -23,11 +24,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
 	int3 sampleIndices = int3(input.position.xy, 0);
 
-	float3 normal = normalGB.Load(sampleIndices).xyz;
+	float3 normal = NormalMap.Load(sampleIndices).xyz;
 
-	float3 position = positionGB.Load(sampleIndices).xyz;
+	float3 position = Position.Load(sampleIndices).xyz;
 
-	float3 diffuse = diffuseGB.Load(sampleIndices).xyz;
+	float3 diffuse = Texture.Load(sampleIndices).xyz;
 
 	float3 L = -lightDir;
 

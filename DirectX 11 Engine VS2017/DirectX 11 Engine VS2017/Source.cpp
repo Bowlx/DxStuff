@@ -15,7 +15,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	Engine engine;
-	if (engine.Initialize(hInstance, "Game", "MyWindowClass", 1920, 1080))
+	if (engine.Initialize(hInstance, "Game", "MyWindowClass", 1280, 720))
 	{
 		while (engine.ProcessMessages() == true)
 		{

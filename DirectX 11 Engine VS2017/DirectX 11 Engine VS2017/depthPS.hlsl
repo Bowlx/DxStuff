@@ -5,7 +5,7 @@ struct PS_INPUT
 };
 
 
-float4 main(PS_INPUT input) : SV_TARGET
+float4 main(PS_INPUT input) : SV_POSITION
 {
 	// Получаем значение глубины пикселя деля Z пикселя глубины на гомогенную координату W
 	float depthValue = input.depthPosition.z / input.depthPosition.w;

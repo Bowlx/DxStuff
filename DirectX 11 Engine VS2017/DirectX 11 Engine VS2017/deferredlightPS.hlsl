@@ -1,33 +1,34 @@
-Texture2D positionGB	: register(t1);
-Texture2D normalGB		: register(t2);
-Texture2D diffuseGB		: register(t3);
+Texture2D Texture							: register(t1);
+Texture2D NormalMap							: register(t2);
+Texture2D PositionTexture					: register(t3);
 
 SamplerState basicSampler : register(s0);
 
-cbuffer ExternalData : register(b0)
+cbuffer LightData		: register(b0)
 {
 	float3 cameraPosition;
 	float3 lightColor;
-	float3 lightPos;
+	float3 lightPosition;
+
+
 }
+
 struct VertexToPixel
 {
 	float4 position		: SV_POSITION;
+
 };
 
-float4 main(in VertexToPixel input) : SV_TARGET
+float4 main(in VertexToPixel input) : SV_TARGET0
 {
+
 	int3 sampleIndices = int3(input.position.xy, 0);
 
+	float3 normal = NormalMap.Load(sampleIndices).xyz;
+	float3 position = PositionTexture.Load(sampleIndices).xyz;
+	float3 diffuse = Texture.Load(sampleIndices).xyz;
 
-	float3 normal = normalGB.Load(sampleIndices).xyz;
-
-	float3 position = positionGB.Load(sampleIndices).xyz;
-
-	float3 diffuse = diffuseGB.Load(sampleIndices).xyz;
-	
-	
-	float3 L = lightPos - position;
+	float3 L = lightPosition - position;
 	float dist = length(L);
 
 	if (dist > 2.0f)
@@ -51,6 +52,7 @@ float4 main(in VertexToPixel input) : SV_TARGET
 	float3 finalSpecular = specular * diffuse * att;
 
 	float4 totalColor = float4(finalDiffuse + finalSpecular, 1.0f);
-
 	return totalColor;
+
+
 }
