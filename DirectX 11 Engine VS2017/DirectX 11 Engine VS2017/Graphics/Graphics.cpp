@@ -501,9 +501,9 @@ bool Graphics::InitializeScene()
 		//in.SetScale(1.0f, 1.0f, 1.0f);
 		//in.SetPosition(0.0f, -2.0f, 0.0f);
 		//models.push_back(in);
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(0.0f, -2.0f, 2.0f);
-		//models.push_back(in);
+		in.SetScale(1.0f, 1.0f, 1.0f);
+		in.SetPosition(0.0f, 0.0f, 0.0f);
+		models.push_back(in);
 		//in.SetScale(1.0f, 1.0f, 1.0f);
 		//in.SetPosition(-2.0f, -2.0f, 0.0f);
 		//models.push_back(in);
@@ -561,6 +561,10 @@ bool Graphics::InitializeScene()
 		in.lightcolor = XMFLOAT3(0.0f, 0.6f, 0.4f);
 		lights.push_back(in);*/
 		in.SetPosition(2, 0, 1.3f);
+		in.SetScale(5, 5, 5);
+		in.lightcolor = XMFLOAT3(0.3f, 0.0f, 0.7f);
+		lights.push_back(in);
+		in.SetPosition(2, -5, 1.3f);
 		in.SetScale(5, 5, 5);
 		in.lightcolor = XMFLOAT3(0.3f, 0.0f, 0.7f);
 		lights.push_back(in);
