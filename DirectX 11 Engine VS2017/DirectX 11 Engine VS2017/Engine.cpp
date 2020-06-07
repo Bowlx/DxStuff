@@ -134,6 +134,7 @@ void Engine::Update()
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetLeftVector() * cameraSpeed * dt);
 		this->gfx.modelPlayer.AdjustPosition(this->gfx.camera.GetLeftVector() * cameraSpeed * dt);
+		this->gfx.lights[0].AdjustPosition(0, -0.01, 0);
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{
 			/*if (this->gfx.modelPlayer.GetBoundingSphere().Intersects(this->gfx.models[i].GetBoundingSphere()) || this->gfx.models[i].bounded)
@@ -160,6 +161,7 @@ void Engine::Update()
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetRightVector() * cameraSpeed * dt);
 		this->gfx.modelPlayer.AdjustPosition(this->gfx.camera.GetRightVector() * cameraSpeed * dt);
+		this->gfx.lights[0].AdjustPosition(0, 0.01, 0);
 
 		for (auto i = 0; i < this->gfx.models.size(); i++)
 		{

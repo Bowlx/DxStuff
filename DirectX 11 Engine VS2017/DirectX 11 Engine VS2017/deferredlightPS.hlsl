@@ -37,8 +37,8 @@ float4 main(in VertexToPixel input) : SV_TARGET0
 	}
 
 	L /= dist;
-
-	float att = max(0.0f, 1.0f - (dist / 2.0f));
+	float distCoef = 1.8f;
+	float att = max(0.0f, 1.0f - (dist / distCoef));
 
 	float lightAmount = saturate(dot(normal, L));
 	float3 color = lightAmount * lightColor * att;

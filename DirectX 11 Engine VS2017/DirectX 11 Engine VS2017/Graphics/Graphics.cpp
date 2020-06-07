@@ -43,11 +43,12 @@ void Graphics::RenderFrame()
 
 	deviceContext->OMSetBlendState(blendState.Get(), blend, 0xFFFFFFFF);
 	deviceContext->OMSetDepthStencilState(depthStateDR, 0);
-	deviceContext->PSSetShaderResources(1, 1, &shaderResourceViewArray[2]);
-	deviceContext->PSSetShaderResources(2, 1, &shaderResourceViewArray[0]);
+	
 	ID3D11Buffer* nothing = 0;
 	this->deviceContext->PSSetShader(dirlightPS.GetShader(), NULL, 0);
 	this->deviceContext->VSSetShader(dirlightVS.GetShader(), NULL, 0);
+	deviceContext->PSSetShaderResources(0, 3, shaderResourceViewArray);
+	
 	this->deviceContext->IASetInputLayout(this->dirlightVS.GetInputLayout());
 	deviceContext->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
 	deviceContext->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
@@ -56,8 +57,8 @@ void Graphics::RenderFrame()
 	
 	
 	
-	this->cb_ps_dirlightBuffer.data.lightColor = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->cb_ps_dirlightBuffer.data.lightDir = XMFLOAT3(0, +10, -10);
+	this->cb_ps_dirlightBuffer.data.lightColor = XMFLOAT3(0.5f, 0.5f, 0.5f);
+	this->cb_ps_dirlightBuffer.data.lightDir = XMFLOAT3(0, 0, -10);
 	this->cb_ps_dirlightBuffer.ApplyChanges();
 	deviceContext->PSSetConstantBuffers(0, 1, this->cb_ps_dirlightBuffer.GetAddressOf());
 
@@ -103,18 +104,12 @@ void Graphics::RenderFrame()
 		lights[i].DrawToDepth(camera.GetViewMatrix() * camera.GetProjectionMatrix(), light.GetViewMatrix() * light.GetProjectionMatrix());
 
 	}
-
-
-
-
 	
 
 deviceContext->RSSetState(NULL);
 deviceContext->OMSetBlendState(NULL, blend, 0xFFFFFFFF);
 deviceContext->OMSetDepthStencilState(NULL, 0);
-	
 	this->swapchain->Present(0, 0);
-
 
 
 }
@@ -490,99 +485,31 @@ bool Graphics::InitializeScene()
 		Model in;
 		if (!in.Initialize("Data\\Objects\\spherenew.obj", this->device.Get(), this->deviceContext.Get(), this->stonesTexture.Get(), this->stonesTextureNormal.Get(), this->cb_vs_vertexshader))
 			return false;
+		Model cat;
+		if (!cat.Initialize("Data\\Objects\\cat.obj", this->device.Get(), this->deviceContext.Get(), this->catTexture.Get(), this->stonesTextureNormal.Get(), this->cb_vs_vertexshader))
+			return false;
 
+		cat.SetScale(0.2f, 0.2f, 0.2f);
+		cat.AdjustRotation(0, 180, 0);
+		cat.SetPosition(0.5f, -1.0f, 0.0f);
+		models.push_back(cat);
 
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(2.0f, -2.0f, 0.0f);
-		//models.push_back(in);
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(2.0f, -2.0f, 2.0f);
-		//models.push_back(in);
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(0.0f, -2.0f, 0.0f);
-		//models.push_back(in);
-		in.SetScale(1.0f, 1.0f, 1.0f);
-		in.SetPosition(0.0f, 0.0f, 0.0f);
-		models.push_back(in);
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(-2.0f, -2.0f, 0.0f);
-		//models.push_back(in);
-		//in.SetScale(1.0f, 1.0f, 1.0f);
-		//in.SetPosition(-2.0f, -2.0f, 2.0f);
-		//models.push_back(in);
 
 		if (!modelCube.Initialize("Data\\Objects\\cube.obj", this->device.Get(), this->deviceContext.Get(), this->planeTexture.Get(), this->planeTextureNormal.Get(), this->cb_vs_vertexshader))
 			return false;
 
-		/*modelCube.SetScale(5.0f, 0.01f, 5.5f);
-		modelCube.SetPosition(0.0f, -3.5f, 0.0f);
-		models.push_back(modelCube);*/
-		//Right
+	
 		modelCube.SetScale(0.01f, 6.5f, 5.5f);
 		modelCube.SetPosition(2.5f, -2.0f, 0.5f);
 		models.push_back(modelCube);
-		//Left
-		//modelCube.SetScale(0.01f, 3.5f, 5.5f);
-		//modelCube.SetPosition(-2.5f, -2.0f, 0.5f);
-		//models.push_back(modelCube);
-		////Back
-		//modelCube.SetScale(5.0f, 3.5f, 0.01f);
-		//modelCube.SetPosition(0.0f, -2.0f, 3.0f);
-		//models.push_back(modelCube);
 
-
-	/*	in.SetScale(5.0f, 5.0f, 5.0f);
-		in.SetPosition(-3.0f, 0.0f, 0.0f);
-		in.lightcolor = XMFLOAT3(1, 0.3, 0.3);
-		lights.push_back(in);
-		in.SetScale(5, 5, 5);
-		in.SetPosition(3, 0, 0);
-		in.lightcolor = XMFLOAT3(0.5, 1, 0.5);
-		lights.push_back(in);
-		in.SetScale(5, 5, 5);
-		in.SetPosition(2.0f, -2.0f, 0.0f);
-		in.lightcolor = XMFLOAT3(0.3, 0, 1);
-		lights.push_back(in);
-		in.SetScale(5, 5, 5);
-		in.SetPosition(2.0f, -2.0f, 0.0f);
-		in.lightcolor = XMFLOAT3(0.3, 0, 0.7);
-		lights.push_back(in);
-		in.SetScale(5, 5, 5);
-		in.SetPosition(-2.0f, 0.0f, 0.0f);
-		in.lightcolor = XMFLOAT3(0.2, 0.3f, 0.8f);
-		lights.push_back(in);
-		in.SetScale(5, 5, 5);
-		in.SetPosition(1.0f, -1.0f, 0.0f);
-		in.lightcolor = XMFLOAT3(0.8f, 0.0f, 0.5f);
-		lights.push_back(in);
-		
-		in.SetScale(5, 5, 5);
-		in.SetPosition(2.0f, 2.0f, 1.0f);
-		in.lightcolor = XMFLOAT3(0.0f, 0.6f, 0.4f);
-		lights.push_back(in);*/
+	
 		in.SetPosition(2, 0, 1.3f);
 		in.SetScale(5, 5, 5);
 		in.lightcolor = XMFLOAT3(0.3f, 0.0f, 0.7f);
 		lights.push_back(in);
-		in.SetPosition(2, -5, 1.3f);
-		in.SetScale(5, 5, 5);
-		in.lightcolor = XMFLOAT3(0.3f, 0.0f, 0.7f);
-		lights.push_back(in);
-		
-
-		
-
-	/*	if (!skybox.Initialize("Data\\Objects\\sphere.obj", this->device.Get(), this->deviceContext.Get(), this->skyboxTexture.Get(), this->cb_vs_vertexshader))
-			return false;
-		skybox.SetPosition(0, 10, 0);
-		skybox.SetScale(100, 100, 100);*/
-		
-	/*	if (!modelPlayer.Initialize("Data\\Objects\\spherenew.obj", this->device.Get(), this->deviceContext.Get(), this->skyboxTexture.Get(), this->cb_vs_vertexshader))
-			return false;*/
-	/*	modelPlayer.SetPosition(0, -1  , 8);
-		modelPlayer.SetScale(1.25, 1.25, 1.25);*/
-		
 	
+				
 	
 		camera.SetPosition(0.0f, 0, -5);
 		camera.SetProjectionValues(90.0f, static_cast<float>(windowWidth) / static_cast<float>(windowHeight), 0.1f, 1000.0f);
